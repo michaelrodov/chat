@@ -158,7 +158,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Messages.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Models\NumericChartOutput.cs" />
     <Compile Include="Models\SlimMessageModel.cs" />
+    <Compile Include="Models\StatisticsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controllers\HomeController.cs" />
   </ItemGroup>

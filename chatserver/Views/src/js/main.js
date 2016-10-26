@@ -5,6 +5,4 @@ import ChatApp from './ChatApp.jsx';
 
 
 
-
-
 ReactDOM.render(<ChatApp/>, document.getElementById('react-container'));

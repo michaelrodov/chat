@@ -29,10 +29,14 @@
 
 /**/
 .chat--header {
-    min-height: 40px;
     line-height: 40px;
     font-size: 20px;
     background-color: #eeeae5;
+}
+
+.chat--header .line-chart{
+    font-size: 10px;
+    line-height: 10px;
 }
 
 .container--list-messages {
@@ -137,7 +141,7 @@
     padding: 10px;
     margin: 0 10px;
     border-radius: 5px;
-    box-shadow: 1px 1px 1px 1px gray;
+    box-shadow: 1px 1px 5px 0px gray;
 }
 
 .mine-message > .message-text {

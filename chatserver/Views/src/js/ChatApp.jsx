@@ -8,10 +8,9 @@ export default class ChatApp extends React.Component {
         this.state = {username: ""};
     }
 
-    _login(username) {
-        console.log(username);
-        this.setState({username: username});
-    };
+    componentWillReceiveProps(newProps) {
+
+    }
 
     render() {
         let loginModal = "";
@@ -31,9 +30,15 @@ export default class ChatApp extends React.Component {
         return (
             <div className="main-page">
                 {loginModal}
-                <ChatWindow ref="" className="fullsize centered-content" messages={this.mockMessages}
+                <ChatWindow ref=""
+                            className="fullsize centered-content"
+                            messages={this.mockMessages}
                             username={this.state.username}/>
             </div>)
+    }
+
+    _login(username) {
+        this.setState({username: username});
     }
 }
 

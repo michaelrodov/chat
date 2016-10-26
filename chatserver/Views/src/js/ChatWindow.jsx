@@ -2,6 +2,8 @@ import React from 'react';
 import Message from './Message.jsx';
 import InputBar from './InputBar.jsx';
 import {xhttp} from 'xhttp';
+import * as Charts from './charts';
+
 
 
 export default class ChatWindow extends React.Component {
@@ -14,6 +16,9 @@ export default class ChatWindow extends React.Component {
         };
     }
 
+    componentDidMount() {
+        Charts.lineChartObject = Charts.generateLineChart([['WpH', 30, 200, 100, 400, 150, 250],['MpH', 3, 20, 10, 40, 15, 25]], "#lineChart");
+    }
 
     componentWillReceiveProps(newProps) {
         let fetcher = window.setInterval(this._fetchLatestMessages.bind(this), 2000, newProps.username);
@@ -26,14 +31,17 @@ export default class ChatWindow extends React.Component {
         let messageList = this._buildMessageList();
         return (
             <div className="container--chat-page">
-                <div className="chat--header">{this.props.username}</div>
+                <div className="chat--header">
+                    <div>{this.props.username}</div>
+                    <div id="lineChart" className="line-chart"></div>
+                </div>
                 <div className="container--list-messages">
                     {messageList}
                 </div>
                 <InputBar actionName="send"
                           placeholder="Type a message"
                           className="chat--input"
-                          ref = "messageInput"
+                          ref="messageInput"
                           value=""
                           submitAction={this._addMessage.bind(this)}/>
             </div>
@@ -49,9 +57,9 @@ export default class ChatWindow extends React.Component {
     _addMessages(msgs) {
         let maxId;
 
-        if(msgs && msgs.length > 0){
+        if (msgs && msgs.length > 0) {
             maxId = (msgs[msgs.length - 1]).ID;
-        }else{
+        } else {
             return;
         }
 

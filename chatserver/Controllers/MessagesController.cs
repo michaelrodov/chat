@@ -17,6 +17,7 @@ namespace chatserver.Controllers
     public class MessagesController : ApiController
     {
         private dbEntities db = new dbEntities();
+        private StatisticsModel statistics = new StatisticsModel();
 
         /***
          * Fetch the messages for a certain user starting from certain id
@@ -31,7 +32,6 @@ namespace chatserver.Controllers
             {
                 return db.MESSAGES
                     .Where(o => (o.ID > afterid))
-                    //.Where(o => (String.Equals(o.TO, user) || String.Equals(o.FROM, user)))
                     .AsEnumerable();
             }
             catch (Exception e)
@@ -53,6 +53,103 @@ namespace chatserver.Controllers
         //    return message;
         //}
 
+
+
+        [HttpGet]
+        [EnableCors(origins: "*", headers: "*", methods: "*")]
+        [Route("statistics/timebetweenmsg")]
+        public HttpResponseMessage averageTimeBetweenMessages()
+        {
+            if (!ModelState.IsValid)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+            }
+            //db.MESSAGES.Create(SlimMessageModel.toMessage(slimMessage));
+            //db.Entry(SlimMessageModel.toMessage(slimMessage)).State = EntityState.Modified;
+
+            try
+            {
+
+            }    
+            catch (Exception e)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            }
+
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+
+        [HttpGet]
+        [EnableCors(origins: "*", headers: "*", methods: "*")]
+        [Route("statistics/lettersavg")]
+        public HttpResponseMessage averageWordsPerMessage(String username = "")
+        {
+            if (!ModelState.IsValid)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+            }
+
+            try
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, statistics.getWordsPerHour(username));
+            }
+            catch (Exception e)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            }
+
+        }
+
+        /**/
+        [HttpGet]
+        [EnableCors(origins: "*", headers: "*", methods: "*")]
+        [Route("statistics/words/perhour")]
+        public HttpResponseMessage averageWordsPerMessage(long hours)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+            }
+
+            try
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, statistics.getWordsPerHour());
+            }
+            catch (Exception e)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            }
+
+        }
+
+        /**/
+        [HttpGet]
+        [EnableCors(origins: "*", headers: "*", methods: "*")]
+        [Route("statistics/messages/perhour")]
+        public HttpResponseMessage averageMessagesPerHour(long hours)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+            }
+            
+            try
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, statistics.getMessagesPerHour());
+            }
+            catch (Exception e)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            }
+
+        }
+
+
+        /**
+         * Add a chat message to the chat list
+         */ 
         [HttpPut]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
         [Route("add")]
