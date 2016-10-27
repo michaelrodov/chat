@@ -21,7 +21,7 @@ namespace chatserver.Controllers
 
         /***
          * Fetch the messages for a certain user starting from certain id
-         */ 
+         */
         [HttpGet]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
         [Route("get/afterid/{afterid}/user/{user}")]
@@ -55,34 +55,31 @@ namespace chatserver.Controllers
 
 
 
-        [HttpGet]
-        [EnableCors(origins: "*", headers: "*", methods: "*")]
-        [Route("statistics/timebetweenmsg")]
-        public HttpResponseMessage averageTimeBetweenMessages()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
-            }
-            //db.MESSAGES.Create(SlimMessageModel.toMessage(slimMessage));
-            //db.Entry(SlimMessageModel.toMessage(slimMessage)).State = EntityState.Modified;
+        //[HttpGet]
+        //[EnableCors(origins: "*", headers: "*", methods: "*")]
+        //[Route("statistics/timebetweenmsg")]
+        //public HttpResponseMessage averageTimeBetweenMessages()
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+        //    }
+        //    try
+        //    {
 
-            try
-            {
+        //    }    
+        //    catch (Exception e)
+        //    {
+        //        return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+        //    }
 
-            }    
-            catch (Exception e)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
-            }
-
-            return Request.CreateResponse(HttpStatusCode.OK);
-        }
+        //    return Request.CreateResponse(HttpStatusCode.OK);
+        //}
 
 
         [HttpGet]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
-        [Route("statistics/lettersavg")]
+        [Route("statistics/scalars")]
         public HttpResponseMessage averageWordsPerMessage(String username = "")
         {
             if (!ModelState.IsValid)
@@ -92,7 +89,13 @@ namespace chatserver.Controllers
 
             try
             {
-                return Request.CreateResponse(HttpStatusCode.OK, statistics.getWordsPerHour(username));
+                Dictionary<String, long> scalarDictionary = new Dictionary<string, long>();
+
+                scalarDictionary.Add("avgLettersAllUsers", statistics.getAvgLetters(""));
+                scalarDictionary.Add("avgLettersPerUser", statistics.getAvgLetters(username));
+                scalarDictionary.Add("timeBetweenMsg", 0);
+
+                return Request.CreateResponse(HttpStatusCode.OK, scalarDictionary);
             }
             catch (Exception e)
             {
@@ -104,8 +107,8 @@ namespace chatserver.Controllers
         /**/
         [HttpGet]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
-        [Route("statistics/words/perhour")]
-        public HttpResponseMessage averageWordsPerMessage(long hours)
+        [Route("statistics/vectors")]
+        public HttpResponseMessage averageWordsPerMessage(long hours = 168)
         {
             if (!ModelState.IsValid)
             {
@@ -114,7 +117,33 @@ namespace chatserver.Controllers
 
             try
             {
-                return Request.CreateResponse(HttpStatusCode.OK, statistics.getWordsPerHour());
+                Dictionary<String, long[]> vectorDictionary = new Dictionary<String, long[]>();
+                List<NumericChartOutput> wph = statistics.getWordsPerHour(hours);
+                List<NumericChartOutput> mph = statistics.getMessagesPerHour(hours);
+
+                long[] wordsPerHourLastWeek = new long[hours];
+                long[] msgPerHourLastWeek = new long[hours];
+
+                wph.ForEach(r =>
+                {
+                    if (Math.Abs(r.K) < msgPerHourLastWeek.Length)
+                    {
+                        wordsPerHourLastWeek[Math.Abs(r.K)] = r.V;
+                    }
+                });
+
+                mph.ForEach(r =>
+                {
+                    if (Math.Abs(r.K) < msgPerHourLastWeek.Length)
+                    {
+                        msgPerHourLastWeek[Math.Abs(r.K)] = r.V;
+                    }
+                });
+                
+                vectorDictionary.Add("wordsPerHourLastWeek", wordsPerHourLastWeek);
+                vectorDictionary.Add("msgPerHourLastWeek", msgPerHourLastWeek);
+
+                return Request.CreateResponse(HttpStatusCode.OK, vectorDictionary);
             }
             catch (Exception e)
             {
@@ -124,32 +153,32 @@ namespace chatserver.Controllers
         }
 
         /**/
-        [HttpGet]
-        [EnableCors(origins: "*", headers: "*", methods: "*")]
-        [Route("statistics/messages/perhour")]
-        public HttpResponseMessage averageMessagesPerHour(long hours)
-        {
+        //[HttpGet]
+        //[EnableCors(origins: "*", headers: "*", methods: "*")]
+        //[Route("statistics/messages/perhour")]
+        //public HttpResponseMessage averageMessagesPerHour(long hours)
+        //{
 
-            if (!ModelState.IsValid)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
-            }
-            
-            try
-            {
-                return Request.CreateResponse(HttpStatusCode.OK, statistics.getMessagesPerHour());
-            }
-            catch (Exception e)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
-            }
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+        //    }
 
-        }
+        //    try
+        //    {
+        //        return Request.CreateResponse(HttpStatusCode.OK, statistics.getMessagesPerHour(1));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+        //    }
+
+        //}
 
 
         /**
          * Add a chat message to the chat list
-         */ 
+         */
         [HttpPut]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
         [Route("add")]
@@ -159,8 +188,6 @@ namespace chatserver.Controllers
             {
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
             }
-            //db.MESSAGES.Create(SlimMessageModel.toMessage(slimMessage));
-            //db.Entry(SlimMessageModel.toMessage(slimMessage)).State = EntityState.Modified;
             db.MESSAGES.Add(SlimMessageModel.toMessage(slimMessage));
             try
             {

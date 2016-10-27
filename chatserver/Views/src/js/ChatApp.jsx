@@ -31,6 +31,7 @@ export default class ChatApp extends React.Component {
             <div className="main-page">
                 {loginModal}
                 <ChatWindow ref=""
+                            apiUrl={this.props.apiUrl}
                             className="fullsize centered-content"
                             messages={this.mockMessages}
                             username={this.state.username}/>

@@ -12,31 +12,44 @@ export default class ChatWindow extends React.Component {
         super(props);
         this.state = {
             messages: [],
-            latestId: 0
+            latestId: 0,
+            timeBetweenMsg: 0,
+            avgLettersPerUser: 0,
+            avgLettersAllUsers: 0,
+            wph: ["wph"],
+            mph: ["mph"],
+
         };
     }
 
     componentDidMount() {
-        Charts.lineChartObject = Charts.generateLineChart([['WpH', 30, 200, 100, 400, 150, 250],['MpH', 3, 20, 10, 40, 15, 25]], "#lineChart");
+        this._fetchStatisticsScalars.bind(this);
+        this._fetchStatisticsVectors.bind(this)
+        Charts.lineChartObject = Charts.generateLineChart([["mph",0,0,0],["wph",0,0,0]], "#lineChart");
     }
 
     componentWillReceiveProps(newProps) {
-        let fetcher = window.setInterval(this._fetchLatestMessages.bind(this), 2000, newProps.username);
-        //this._fetchLatestMessages(newProps.username);
-        this.setState({fetcherId: fetcher});
+        let fetcherMsg = window.setInterval(this._fetchLatestMessages.bind(this), 2000, newProps.username);
+        let fetcherScalars = window.setInterval(this._fetchStatisticsScalars.bind(this), 60000);
+        let fetcherVectors = window.setInterval(this._fetchStatisticsVectors.bind(this), 10000);
+        //this.setState({fetcherId: fetcher, fetcherScalars: fetcherScalars, fetcherVectors: fetcherVectors});
     }
 
 
     render() {
+
         let messageList = this._buildMessageList();
         return (
             <div className="container--chat-page">
                 <div className="chat--header">
-                    <div>{this.props.username}</div>
+                    <div className="container--statistic-scalars">
+                        <div className="--"><spa>Sec/Msg</spa><span></span></div>
+                    </div>
                     <div id="lineChart" className="line-chart"></div>
                 </div>
                 <div className="container--list-messages">
                     {messageList}
+                    <div className="container--username">{this.props.username}</div>
                 </div>
                 <InputBar actionName="send"
                           placeholder="Type a message"
@@ -82,7 +95,7 @@ export default class ChatWindow extends React.Component {
         slimMessage.TO = "";
 
         xhttp({
-                url: "http://localhost:34778/api/messages/add",
+                url: "http://"+this.props.apiUrl+"/api/messages/add",
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -107,7 +120,7 @@ export default class ChatWindow extends React.Component {
      */
     _fetchLatestMessages(username) {
         xhttp({
-                url: "http://localhost:34778/api/messages/get/afterid/" + this.state.latestId + "/user/" + username,
+                url: "http://"+this.props.apiUrl+"/api/messages/get/afterid/" + this.state.latestId + "/user/" + username,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -142,5 +155,45 @@ export default class ChatWindow extends React.Component {
         return messageList;
     }
 
+    _fetchStatisticsScalars(){
+        xhttp({
+                url: "http://"+this.props.apiUrl+"/api/messages/statistics/scalars",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                method: 'GET'
+            },
+            (data, xhr) => {
+
+                this.setState(data);
+
+            },
+            (err, xhr) => {
+                console.error(xhr.responseURL, xhr.status, xhr.statusText);
+            });
+    }
+    _fetchStatisticsVectors(){
+        xhttp({
+                url: "http://"+this.props.apiUrl+"/api/messages/statistics/vectors?hours=5",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                method: 'GET'
+            },
+            (data, xhr) => {
+
+                let wph = ["wph", ...data.wordsPerHourLastWeek]; //wordsPerHourLastWeek
+                let mph = ["mph", ...data.msgPerHourLastWeek]; //msgPerHourLastWeek
+                Charts.lineChartObject.load({columns: [wph, mph]});
+                console.log("vectors loaded");
+            },
+            (err, xhr) => {
+                console.error(xhr.responseURL, xhr.status, xhr.statusText);
+            });
+    }
 
 }
