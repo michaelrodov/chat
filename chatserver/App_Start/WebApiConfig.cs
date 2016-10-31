@@ -27,17 +27,11 @@ namespace chatserver
 
         public static void AddRoutes(HttpConfiguration config)
         {
-            //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
 
             //Configuring inline routes
+            
             config.MapHttpAttributeRoutes();
 
-            //cancel default routing - this is soooooo 2000s
-            //config.Routes.MapHttpRoute(
-            //    name: "DefaultApi",
-            //    routeTemplate: "api/{controller}/{id}",
-            //    defaults: new { id = RouteParameter.Optional }
-            //);
         }
     }
 }

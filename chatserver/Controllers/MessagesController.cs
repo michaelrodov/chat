@@ -10,6 +10,12 @@ using System.Web;
 using System.Web.Http;
 using chatserver.Models;
 using System.Web.Http.Cors;
+using Microsoft.AspNet.SignalR;
+using System.IO;
+using System.Collections.Concurrent;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace chatserver.Controllers
 {
@@ -18,6 +24,46 @@ namespace chatserver.Controllers
     {
         private dbEntities db = new dbEntities();
         private StatisticsModel statistics = new StatisticsModel();
+        private ChatHub chatHub = new ChatHub();
+        IHubContext hubContext = GlobalHost.ConnectionManager.GetHubContext<ChatHub>();
+
+        //private static readonly ConcurrentQueue<StreamWriter> _streammessage = new ConcurrentQueue<StreamWriter>();
+
+        ////public static void OnStreamAvailable(Stream stream, HttpContentHeaders headers, TransportContext context, Task task)
+        ////{
+        ////    StreamWriter streamwriter = new StreamWriter(stream);
+        ////    _streammessage.Enqueue(streamwriter);
+        ////}
+
+        //private static void MessageCallback(TweetModel t)
+        //{
+        //    foreach (var subscriber in _streammessage)
+        //    {
+        //        subscriber.WriteLine("data:" + JsonConvert.SerializeObject(t) + "n");
+        //        subscriber.Flush();
+        //    }
+        //}
+
+        //public HttpResponseMessage Get(HttpRequestMessage request)
+        //{
+        //    HttpResponseMessage response = request.CreateResponse();
+        //    response.Content = new PushStreamContent(OnStreamAvailable, "text/event-stream");
+            
+        //    return response;
+        //}
+
+        //private Task OnStreamAvailable(Stream arg1, HttpContent arg2, TransportContext arg3)
+        //{
+        //    StreamWriter streamwriter = new StreamWriter(arg1);
+        //    _streammessage.Enqueue(streamwriter);
+        //    return null;
+        //}
+
+
+        //public void Post(TweetModel t)
+        //{
+        //    MessageCallback(t);
+        //}
 
         /***
          * Fetch the messages for a certain user starting from certain id
@@ -40,42 +86,6 @@ namespace chatserver.Controllers
             }
 
         }
-
-        // GET api/Messages/5
-        //public MESSAGE GetMESSAGE(int id)
-        //{
-        //    MESSAGE message = db.MESSAGES.Find(id);
-        //    if (message == null)
-        //    {
-        //        throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.NotFound));
-        //    }
-
-        //    return message;
-        //}
-
-
-
-        //[HttpGet]
-        //[EnableCors(origins: "*", headers: "*", methods: "*")]
-        //[Route("statistics/timebetweenmsg")]
-        //public HttpResponseMessage averageTimeBetweenMessages()
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
-        //    }
-        //    try
-        //    {
-
-        //    }    
-        //    catch (Exception e)
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
-        //    }
-
-        //    return Request.CreateResponse(HttpStatusCode.OK);
-        //}
-
 
         [HttpGet]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
@@ -150,30 +160,7 @@ namespace chatserver.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
             }
 
-        }
-
-        /**/
-        //[HttpGet]
-        //[EnableCors(origins: "*", headers: "*", methods: "*")]
-        //[Route("statistics/messages/perhour")]
-        //public HttpResponseMessage averageMessagesPerHour(long hours)
-        //{
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
-        //    }
-
-        //    try
-        //    {
-        //        return Request.CreateResponse(HttpStatusCode.OK, statistics.getMessagesPerHour(1));
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
-        //    }
-
-        //}
+        }  
 
 
         /**
@@ -188,64 +175,29 @@ namespace chatserver.Controllers
             {
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
             }
-            db.MESSAGES.Add(SlimMessageModel.toMessage(slimMessage));
             try
             {
+                db.MESSAGES.Add(SlimMessageModel.toMessage(slimMessage));
                 db.SaveChanges();
+                //hubContext.Clients.All.broadcast("Fetch", "stop the chat");
+
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, ex);
             }
+
             catch (Exception e)
             {
+                //after saving success, bcast to all REFRESH
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
             }
 
+            
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
-        // POST api/Messages
-        //public HttpResponseMessage PostMESSAGE(MESSAGE message)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        db.MESSAGES.Add(message);
-        //        db.SaveChanges();
-
-        //        HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, message);
-        //        response.Headers.Location = new Uri(Url.Link("DefaultApi", new { id = message.ID }));
-        //        return response;
-        //    }
-        //    else
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
-        //    }
-        //}
-
-        // DELETE api/Messages/5
-        //public HttpResponseMessage DeleteMESSAGE(int id)
-        //{
-        //    MESSAGE message = db.MESSAGES.Find(id);
-        //    if (message == null)
-        //    {
-        //        return Request.CreateResponse(HttpStatusCode.NotFound);
-        //    }
-
-        //    db.MESSAGES.Remove(message);
-
-        //    try
-        //    {
-        //        db.SaveChanges();
-        //    }
-        //    catch (DbUpdateConcurrencyException ex)
-        //    {
-        //        return Request.CreateErrorResponse(HttpStatusCode.NotFound, ex);
-        //    }
-
-        //    return Request.CreateResponse(HttpStatusCode.OK, message);
-        //}
-
+       
         protected override void Dispose(bool disposing)
         {
             db.Dispose();

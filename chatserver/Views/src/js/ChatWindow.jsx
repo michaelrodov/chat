@@ -5,7 +5,6 @@ import {xhttp} from 'xhttp';
 import * as Charts from './charts';
 
 
-
 export default class ChatWindow extends React.Component {
 
     constructor(props) {
@@ -18,20 +17,36 @@ export default class ChatWindow extends React.Component {
             avgLettersAllUsers: 0,
             wph: ["wph"],
             mph: ["mph"],
-
+            hub: {}
         };
     }
 
     componentDidMount() {
         this._fetchStatisticsScalars.bind(this);
         this._fetchStatisticsVectors.bind(this)
-        Charts.lineChartObject = Charts.generateLineChart([["mph",0,0,0],["wph",0,0,0]], "#lineChart");
+        Charts.lineChartObject = Charts.generateLineChart([["mph", 0, 0, 0], ["wph", 0, 0, 0]], "#lineChart");
     }
 
     componentWillReceiveProps(newProps) {
-        let fetcherMsg = window.setInterval(this._fetchLatestMessages.bind(this), 2000, newProps.username);
-        let fetcherScalars = window.setInterval(this._fetchStatisticsScalars.bind(this), 60000);
-        let fetcherVectors = window.setInterval(this._fetchStatisticsVectors.bind(this), 10000);
+        //received new username
+        if (newProps.username != this.props.username) {
+            if (newProps.connection) {
+                let hub = this._setupHub(newProps.connection, newProps.username);
+
+                newProps.connection.start({jsonp: true})
+                    .done(function () {
+                        console.log('Now connected, connection ID=' + newProps.connection.id);
+                    })
+                    .fail(function () {
+                        console.error('Could not connect');
+                    });
+                this.setState({hub: hub});
+            }
+
+            let fetcherMsg = window.setInterval(this._fetchLatestMessages.bind(this), 2000, newProps.username);
+            let fetcherScalars = window.setInterval(this._fetchStatisticsScalars.bind(this), 60000);
+            let fetcherVectors = window.setInterval(this._fetchStatisticsVectors.bind(this), 10000);
+        }
         //this.setState({fetcherId: fetcher, fetcherScalars: fetcherScalars, fetcherVectors: fetcherVectors});
     }
 
@@ -43,7 +58,9 @@ export default class ChatWindow extends React.Component {
             <div className="container--chat-page">
                 <div className="chat--header">
                     <div className="container--statistic-scalars">
-                        <div className="--"><spa>Sec/Msg</spa><span></span></div>
+                        <div className="--">
+                            <spa>Sec/Msg</spa>
+                            <span></span></div>
                     </div>
                     <div id="lineChart" className="line-chart"></div>
                 </div>
@@ -61,6 +78,15 @@ export default class ChatWindow extends React.Component {
         );
     }
 
+    _setupHub(connection, hubname) {
+        let hub = connection.createHubProxy(hubname);
+
+        hub.on('fetch', function (message) {
+            console.log("@MSG " + message);
+        });
+
+        return hub;
+    }
 
     /***
      * Adding a list of newely received messages to our current messages
@@ -95,7 +121,7 @@ export default class ChatWindow extends React.Component {
         slimMessage.TO = "";
 
         xhttp({
-                url: "http://"+this.props.apiUrl+"/api/messages/add",
+                url: "http://" + this.props.apiUrl + "/api/messages/add",
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -120,7 +146,7 @@ export default class ChatWindow extends React.Component {
      */
     _fetchLatestMessages(username) {
         xhttp({
-                url: "http://"+this.props.apiUrl+"/api/messages/get/afterid/" + this.state.latestId + "/user/" + username,
+                url: "http://" + this.props.apiUrl + "/api/messages/get/afterid/" + this.state.latestId + "/user/" + username,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -155,9 +181,9 @@ export default class ChatWindow extends React.Component {
         return messageList;
     }
 
-    _fetchStatisticsScalars(){
+    _fetchStatisticsScalars() {
         xhttp({
-                url: "http://"+this.props.apiUrl+"/api/messages/statistics/scalars",
+                url: "http://" + this.props.apiUrl + "/api/messages/statistics/scalars",
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -174,9 +200,10 @@ export default class ChatWindow extends React.Component {
                 console.error(xhr.responseURL, xhr.status, xhr.statusText);
             });
     }
-    _fetchStatisticsVectors(){
+
+    _fetchStatisticsVectors() {
         xhttp({
-                url: "http://"+this.props.apiUrl+"/api/messages/statistics/vectors?hours=5",
+                url: "http://" + this.props.apiUrl + "/api/messages/statistics/vectors?hours=5",
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
