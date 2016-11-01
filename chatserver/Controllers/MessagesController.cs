@@ -90,7 +90,7 @@ namespace chatserver.Controllers
         [HttpGet]
         [EnableCors(origins: "*", headers: "*", methods: "*")]
         [Route("statistics/scalars")]
-        public HttpResponseMessage averageWordsPerMessage(String username = "")
+        public HttpResponseMessage averageWordsPerMessage(String username="")
         {
             if (!ModelState.IsValid)
             {
@@ -99,7 +99,7 @@ namespace chatserver.Controllers
 
             try
             {
-                Dictionary<String, long> scalarDictionary = new Dictionary<string, long>();
+                Dictionary<String, double> scalarDictionary = new Dictionary<String, double>();
 
                 scalarDictionary.Add("avgLettersAllUsers", statistics.getAvgLetters(""));
                 scalarDictionary.Add("avgLettersPerUser", statistics.getAvgLetters(username));

@@ -25,19 +25,19 @@ namespace chatserver.Models
                 + " GROUP BY [WPH].[HOUR]"
                 + " HAVING [WPH].[HOUR] < @hours";
 
-        private static String LETTERS_AVG = "SELECT CONVERT(bigint,ISNULL(AVG(LEN(REPLACE([TEXT],' ',''))),0)) FROM [MESSAGES] ";
+        private static String LETTERS_AVG = "SELECT ISNULL(AVG(CAST(LEN(REPLACE([TEXT],' ','')) as float)),0) FROM [MESSAGES]";
 
         //private static String MESSAGE_PER_HOUR = "SELECT '1' AS k, '2' AS v FROM chattar.dbo.MESSAGES GROUP BY DATEDIFF_BIG(hh, '1970-01-01 00:00:00', [SENDTIME]);";
 
-        public long getAvgLetters(String username)
+        public double getAvgLetters(String username)
         {
             try
             {
                 if(String.IsNullOrEmpty(username)){
-                    return db.Database.SqlQuery<long>(LETTERS_AVG).Single<long>();
+                    return db.Database.SqlQuery<double>(LETTERS_AVG).Single<double>();
                 }else{
                     SqlParameter userParam = new SqlParameter("@userParam", username);
-                    return db.Database.SqlQuery<long>(LETTERS_AVG+" WHERE [FROM] = @userParam", userParam).Single<long>();
+                    return db.Database.SqlQuery<double>(LETTERS_AVG + " WHERE [FROM] = @userParam", userParam).Single<double>();
                 }
             }
             catch (Exception e)

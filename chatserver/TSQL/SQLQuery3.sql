@@ -43,9 +43,9 @@ GROUP BY [WPH].[HOUR]
 ;
 
 --avg letters for all
-SELECT CONVERT(bigint,ISNULL(AVG(LEN(REPLACE([TEXT],' ',''))),0)) FROM [MESSAGES]
+SELECT ISNULL(AVG(CAST(LEN(REPLACE([TEXT],' ','')) as float)),0) FROM [MESSAGES]
 --avg letters for user
-SELECT AVG(LEN(REPLACE([TEXT],' ',''))) FROM [MESSAGES] WHERE [FROM]='Andrew';
+SELECT AVG(CAST(LEN(REPLACE([TEXT],' ','')) as float)) FROM [MESSAGES] WHERE [FROM]='Adam';
 
 --AVG TIME BETWEEN MSGS
 
